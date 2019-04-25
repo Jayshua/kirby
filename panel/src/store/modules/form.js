@@ -92,12 +92,12 @@ export default {
       if (original === current) {
         Vue.delete(state.models[id].changes, field);
       } else {
-        Vue.set(state.models[id].changes, field, true);
+        Vue.set(state.models[id].changes, field, value);
       }
 
       localStorage.setItem(
         "kirby$form$" + id,
-        JSON.stringify(state.models[id].values)
+        JSON.stringify(state.models[id].changes)
       );
     }
   },
@@ -119,10 +119,10 @@ export default {
       context.commit("CREATE", model);
       context.commit("CURRENT", model.id);
 
-      const values = localStorage.getItem("kirby$form$" + model.id);
+      const changes = localStorage.getItem("kirby$form$" + model.id);
 
-      if (values) {
-        const data = JSON.parse(values);
+      if (changes) {
+        const data = JSON.parse(changes);
 
         Object.keys(data).forEach(field => {
           const value = data[field];
