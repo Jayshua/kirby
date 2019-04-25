@@ -8,6 +8,8 @@ export default {
     models: {},
     current: null,
     isDisabled: false,
+    lock: null,
+    unlock: null
   },
   getters: {
     current: state => {
@@ -31,9 +33,6 @@ export default {
     },
     isDisabled: (state) => {
       return state.isDisabled === true;
-    },
-    isLocked: (state) => {
-      return state.isLocked === true;
     },
     model: (state, getters) => id => {
       return getters.exists(id)
@@ -66,6 +65,12 @@ export default {
     },
     IS_DISABLED(state, disabled) {
       state.isDisabled = disabled;
+    },
+    LOCK(state, lock) {
+      state.lock = lock;
+    },
+    UNLOCK(state, unlock) {
+      state.lock = unlock;
     },
     REMOVE(state, id) {
       Vue.delete(state.models, id);
@@ -117,6 +122,8 @@ export default {
       }
 
       context.commit("CREATE", model);
+      context.commit("LOCK", model.lock);
+      context.commit("UNLOCK", model.unlock);
       context.commit("CURRENT", model.id);
 
       const changes = localStorage.getItem("kirby$form$" + model.id);

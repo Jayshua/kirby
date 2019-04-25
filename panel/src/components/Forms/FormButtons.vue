@@ -1,8 +1,23 @@
 <template>
-  <nav v-if="hasChanges" class="k-form-buttons">
+  <nav v-if="hasLock" class="k-form-buttons" theme="lock">
+    <k-view>
+      <k-text>
+        Page is locked by: {{ lock }}
+        (last active {{ lock }})
+      </k-text>
+      <k-button
+        :disabled="true"
+        icon="lock"
+        class="k-form-button"
+      >
+        {{ $t("unlock") }}
+      </k-button>
+    </k-view>
+  </nav>
+  <nav v-else-if="hasChanges" class="k-form-buttons">
     <k-view>
       <k-button
-        :disabled="isLocked"
+        :disabled="isDisabled"
         icon="undo"
         class="k-form-button"
         @click="reset"
@@ -10,7 +25,7 @@
         {{ $t("revert") }}
       </k-button>
       <k-button
-        :disabled="isLocked"
+        :disabled="isDisabled"
         icon="check"
         class="k-form-button"
         @click="save"
@@ -23,15 +38,42 @@
 
 <script>
 export default {
+  data() {
+    return {
+      interval: null
+    }
+  },
   computed: {
     hasChanges() {
       return this.$store.getters["form/hasChanges"](this.id);
     },
+    hasLock() {
+      return true;
+    },
+    hasUnlock() {
+      return this.unlock !== null;
+    },
     id() {
       return this.$store.state.form.current;
     },
-    isLocked() {
-      return this.$store.getters["form/isLocked"];
+    isDisabled() {
+      return this.$store.getters["form/isDisabled"];
+    },
+    lock() {
+      return this.$store.state.form.lock;
+    },
+    unlock() {
+      return this.$store.state.form.unlock;
+    },
+  },
+  watch: {
+    hasChanges(changes) {
+      if (changes === true) {
+        this.locking();
+        this.interval = setInterval(this.locking, 60 * 1000);
+      } else {
+        clearInterval(this.interval);
+      }
     }
   },
   created() {
@@ -41,6 +83,11 @@ export default {
     this.$events.$off("keydown.cmd.s", this.save);
   },
   methods: {
+    locking() {
+      this.$api.patch(this.$route.path + "/lock").catch(error => {
+
+      });
+    },
     reset() {
       this.$store.dispatch("form/revert", this.id);
     },
@@ -93,6 +140,9 @@ export default {
 <style lang="scss">
 .k-form-buttons {
   background: $color-notice-on-dark;
+}
+.k-form-buttons[theme="lock"] {
+  background: $color-negative-on-dark;
 }
 .k-form-buttons .k-view {
   display: flex;

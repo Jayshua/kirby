@@ -100,6 +100,12 @@ return [
         'url' => function (Page $page) {
             return $page->url();
         },
+        'lock' => function (Page $page) {
+            return $page->contentLock();
+        },
+        'unlock' => function (Page $page) {
+            return $page->contentUnlock();
+        },
     ],
     'type' => Page::class,
     'views' => [
@@ -134,7 +140,9 @@ return [
             'previewUrl',
             'slug',
             'title',
-            'url'
+            'url',
+            'lock',
+            'unlock'
         ],
         'selector' => [
             'id',

@@ -7,6 +7,7 @@ use Kirby\Data\Data;
 use Kirby\Exception\Exception;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Exception\LogicException;
+use Kirby\Exception\PermissionException;
 use Kirby\Toolkit\A;
 use Kirby\Toolkit\F;
 use Kirby\Toolkit\Str;
@@ -33,6 +34,17 @@ abstract class ModelWithContent extends Model
      * @return Blueprint
      */
     abstract public function blueprint();
+
+    /**
+     * Remove `.unlocked` trace file
+     *
+     * @internal
+     * @return bool
+     */
+    public function clearUnlock(): bool
+    {
+        F::remove($this->contentFileDirectory() . '/.unlocked');
+    }
 
     /**
      * Executes any given model action
@@ -167,6 +179,42 @@ abstract class ModelWithContent extends Model
     abstract public function contentFileName(): string;
 
     /**
+     * Returns information about current content lock
+     *
+     * @internal
+     * @return null|array
+     */
+    public function contentLock()
+    {
+        try {
+            return Data::read(
+                $this->contentFileDirectory() . '/.lock',
+                'txt'
+            );
+        } catch (\Throwable $th) {
+            return null;
+        }
+    }
+
+    /**
+     * Returns information about content unlock
+     *
+     * @internal
+     * @return null|array
+     */
+    public function contentUnlock()
+    {
+        try {
+            return Data::read(
+                $this->contentFileDirectory() . '/.unlocked',
+                'txt'
+            );
+        } catch (\Throwable $th) {
+            return null;
+        }
+    }
+
+    /**
      * Decrement a given field value
      *
      * @param string $field
@@ -230,6 +278,32 @@ abstract class ModelWithContent extends Model
     public function isValid(): bool
     {
         return Form::for($this)->hasErrors() === false;
+    }
+
+    /**
+     * Locks content file to prevent editing by other users
+     *
+     * @internal
+     * @return bool
+     */
+    public function lock(): bool
+    {
+        $user = $this->kirby()->user();
+
+        if ($current = $this->contentLock()) {
+            if ($user->id() !== $current['user']) {
+                throw new PermissionException('Content is already locked by another user');
+            }
+        }
+
+        return Data::write(
+            $this->contentFileDirectory() . '/.lock',
+            [
+                'user' => $user->id(),
+                'time' => time()
+            ],
+            'txt'
+        );
     }
 
     /**
@@ -399,6 +473,23 @@ abstract class ModelWithContent extends Model
         }
 
         return $this->translations;
+    }
+
+    /**
+     * Unlocks content file and creates `.unlocked` trace file
+     *
+     * @internal
+     * @param array $data
+     * @return bool
+     */
+    public function unlock(array $data = null): bool
+    {
+        F::remove($this->contentFileDirectory() . '/.lock');
+        return Data::write(
+            $this->contentFileDirectory() . '/.unlocked',
+            $data,
+            'txt'
+        );
     }
 
     /**

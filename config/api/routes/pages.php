@@ -108,4 +108,25 @@ return [
             }
         }
     ],
+    [
+        'pattern' => 'pages/(:any)/lock',
+        'method'  => 'PATCH',
+        'action'  => function (string $path) {
+            return $this->page($path)->lock();
+        }
+    ],
+    [
+        'pattern' => 'pages/(:any)/lock',
+        'method'  => 'DELETE',
+        'action'  => function (string $path) {
+            return $this->page($path)->unlock($this->requestBody());
+        }
+    ],
+    [
+        'pattern' => 'pages/(:any)/unlock',
+        'method'  => 'DELETE',
+        'action'  => function (string $path) {
+            return $this->page($path)->clearUnlock();
+        }
+    ],
 ];

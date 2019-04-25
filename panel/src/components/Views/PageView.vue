@@ -199,7 +199,9 @@ export default {
           this.$store.dispatch("form/create", {
             id: "pages/" + page.id,
             api: this.$api.pages.link(page.id),
-            content: page.content
+            content: page.content,
+            lock: page.lock,
+            unlock: page.unlock
           });
         })
         .catch(error => {
