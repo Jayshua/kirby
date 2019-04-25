@@ -7,7 +7,7 @@ export default {
   state: {
     models: {},
     current: null,
-    isLocked: false
+    isDisabled: false,
   },
   getters: {
     current: state => {
@@ -28,6 +28,9 @@ export default {
     },
     isCurrent: (state) => id => {
       return state.current === id;
+    },
+    isDisabled: (state) => {
+      return state.isDisabled === true;
     },
     isLocked: (state) => {
       return state.isLocked === true;
@@ -61,8 +64,8 @@ export default {
     CURRENT(state, id) {
       state.current = id;
     },
-    IS_LOCKED(state, locked) {
-      state.isLocked = locked;
+    IS_DISABLED(state, disabled) {
+      state.isDisabled = disabled;
     },
     REMOVE(state, id) {
       Vue.delete(state.models, id);
@@ -147,7 +150,7 @@ export default {
       const model = context.getters.model(id);
 
       if (context.getters.isCurrent(id)) {
-        if (context.state.isLocked) {
+        if (context.state.isDisabled) {
           return false;
         }
       }
@@ -157,11 +160,11 @@ export default {
         context.dispatch("revert", id);
       });
     },
-    lock(context) {
-      context.commit("IS_LOCKED", true);
+    disable(context) {
+      context.commit("IS_DISABLED", true);
     },
-    unlock(context) {
-      context.commit("IS_LOCKED", false);
+    enable(context) {
+      context.commit("IS_DISABLED", false);
     },
     update(context, [id, field, value]) {
       context.commit("UPDATE", [id, field, value]);
